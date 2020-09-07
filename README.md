@@ -19,6 +19,8 @@ by netlib.org, with a small modification to avoid a compiler warning (see below)
 So all you have to do is use Visual Studio 2015 to build the supplied project
 **f2c.vcxproj**. This produces the the console application **f2c.exe**.
 
+**Note: Only the 32-bit Win32 build configuration is supported, see issue [#1](https://github.com/albertony/f2c/issues/1).**
+
 If you want to use your own copy of the f2c source code you just have to
 get the project file from this repository, and then download the latest version
 of from <http://www.netlib.org/f2c/>. Extract the subdirectory with name "src",

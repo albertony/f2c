@@ -80,8 +80,8 @@ extern "C" {
 #define Cextern extern
 #endif
 
-// Cextern int unlink Argdcl((const char *));
-// Cextern int fork Argdcl((void)), getpid Argdcl((void)), wait Argdcl((int*));
+//Cextern int unlink Argdcl((const char *));
+//Cextern int fork Argdcl((void)), getpid Argdcl((void)), wait Argdcl((int*));
 
  void
 #ifdef KR_headers
@@ -102,6 +102,11 @@ Un_link_all(int cdelete)
 		}
 	}
 
+#ifndef MSDOS
+#include "sysdep.hd"
+#include <unistd.h> /* for mkdtemp and rmdir */
+#endif
+
 #ifndef NO_TEMPDIR
  static void
 rmtdir(Void)
@@ -113,13 +118,6 @@ rmtdir(Void)
 		}
 	}
 #endif /*NO_TEMPDIR*/
-
-#ifndef MSDOS
-#include "sysdep.hd"
-#ifndef NO_MKDTEMP
-#include <unistd.h> /* for mkdtemp */
-#endif
-#endif
 
  static void
 alloc_names(Void)

@@ -1,29 +1,47 @@
 # About
 
-This repository contains the source code and a Visual Studio 2015 project
-for building the Fortran77 to C source code translator **f2c**.
+This repository contains the source code and a Visual Studio 2015 / Visual C++ 14.0
+project (easily upgradable to newer versions) for building the Fortran77 to C source
+code translator **f2c**.
 
-See also the **libf2c** project, for building a static library containing
-the necessary runtime components for programs converted using f2c.
+See also my [libf2c](https://github.com/albertony/libf2c) project,
+for building a static library containing the necessary runtime
+components for programs converted using f2c.
 
 The f2c utility is still actively maintained and is available at
-<http://www.netlib.org/f2c/>. Read more at <http://www.netlib.org/f2c/README>.
+<http://www.netlib.org/f2c/>. Changelog can be found at <http://www.netlib.org/f2c/changes>.
+Read more in <http://www.netlib.org/f2c/README>.
 
 The contribution of this repository is the Visual Studio project, the source
 code is the original f2c source code available at netlib.org.
+
+## Changelog
+
+See <http://www.netlib.org/f2c/changes> for history of changes in the netlib f2c source,
+and run `f2c.exe --version` on an existing build to see which version it was built from.
+
+12 Jan 2022
+- Updated to latest version of netlib f2c source, version 20210928.
+- Fixes broken x64 build.
+- Released as version 1.1, with release builds of f2c.exe in 32-bit
+and 64-bit using Visual Studio 2022 / Visual C++ 14.3.
+
+22 Mar 2017
+- Initial version, based on netlib f2c source version 20100827.
+- Released as version 1.0, with release builds of f2c.exe in 32-bit
+and 64-bit using Visual Studio 2015 Update 3 / Visual C++ 14.0.
 
 # How to use
 
 The repository includes the original source code of the f2c utility as provided
 by netlib.org, with a small modification to avoid a compiler warning (see below).
-So all you have to do is use Visual Studio 2015 to build the supplied project
+So all you have to do is use Visual Studio to build the supplied project
 **f2c.vcxproj**. This produces the the console application **f2c.exe**.
-
-**Note: Only the 32-bit Win32 build configuration is supported, see issue [#1](https://github.com/albertony/f2c/issues/1).**
 
 If you want to use your own copy of the f2c source code you just have to
 get the project file from this repository, and then download the latest version
-of from <http://www.netlib.org/f2c/>. Extract the subdirectory with name "src",
+of from <http://www.netlib.org/f2c/> (source archive direct download:
+<http://www.netlib.org/f2c/src.tgz>). Extract the subdirectory named "src",
 which contains all the relevant source files. Actually you only need the source
 (.c) and header (.h) files from the src directory, so you can delete all others.
 
@@ -44,17 +62,16 @@ in the same lines. So comment out the following two lines in **sysdep.c**:
 
 # How the Visual Studio project was created
 
-The following steps describe how the Visual Studio project was created, so by
-following them you can do it all yourself without using any files from this repository.
-The steps are based on the VC makefile (makefile.vc) included with the source code,
-and then a substantial portion of my own trial and error.
+The following steps describe how the Visual Studio project was created, just
+for documentation but also such that you can followe similar steps to do it
+all yourself without using any files from this repository.
+The steps are based on the official VC makefile (makefile.vc) included with
+the source code, and then a substantial portion of my own trial and error.
 
 1. Prepare the source code:
-   1. Get the latest version from <http://www.netlib.org/f2c/>. Follow the
-      instructions given to get access. Or for convenience I found it easier
-      to download an archive file available from a mirror:
-      <http://netlib.sandia.gov/cgi-bin/netlib/netlibfiles.tar?filename=netlib/f2c>.
-   2. Extract the netlibfiles.tar (using 7-Zip for example) to a temporary directory.
+   1. Get the latest version from <http://www.netlib.org/f2c/>.
+      Archive direct download link: <http://www.netlib.org/f2c/src.tgz>.
+   2. Extract the src.tgz (using 7-Zip for example) to a temporary directory.
    3. Copy all C source (*.c) and header (*.h) files from subdirectory "src" to
       a subdirectory "src" of the location of the project file you are creating.
 
@@ -131,14 +148,11 @@ So for an even clear build you could remove the include of windows.h and the cod
 calling the GetVolumeInformation function from systep.c. Then you also don't need the
 preprocessor directives `STRICT;WIN32_LEAN_AND_MEAN;NOMINMAX` described above.
 
-
 ## About long long
 
 The original make file for Visual C sets the preprocessor directive `NO_LONG_LONG`,
-but since we have a built-in type `long long` in Visual C++ 2015 we don't need to set it
-in our project.
-
-
+but since we have a built-in type `long long` in Visual C++ 2015 and newer we don't
+need to set it in our project.
 
 # License
 

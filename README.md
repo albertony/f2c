@@ -75,13 +75,13 @@ in the x64 build of the program as of netlib source version 20200916.
 
 In proc.c line 1700 from netlib source version 20200916,
 this is the original code:
-```
+```c
 v->vdim = p = (struct Dimblock *)
     ckalloc( sizeof(int) + (3+2*nd)*sizeof(expptr) );
 ```
 It must be changed to:
-```
-v->vdim = p = (struct Dimblock*)
+```c
+v->vdim = p = (struct Dimblock *)
     ckalloc(sizeof(struct Dimblock) + 2*sizeof(expptr)*(nd-1));
 ```
 

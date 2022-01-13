@@ -13,16 +13,24 @@ The f2c utility is still actively maintained and is available at
 Read more in <http://www.netlib.org/f2c/README>.
 
 The contribution of this repository is the Visual Studio project, the source
-code is the original f2c source code available at netlib.org.
+code is the original f2c source code available at netlib.org - with
+some very small necessary fixes, described [below](#how-to-use).
 
 ## Changelog
 
 See <http://www.netlib.org/f2c/changes> for history of changes in the netlib f2c source,
 and run `f2c.exe --version` on an existing build to see which version it was built from.
 
-12 Jan 2022
-- Updated to latest version of netlib f2c source, version 20210928.
+13 Jan 2022
+- Updated to latest version of netlib f2c source, version 20200916.
+   - The newer 20210928 entry in [changes](http://www.netlib.org/f2c/changes)
+     is an update to readme only, i.e. does not change the version number
+     of the f2c program.
 - Fixes broken x64 build.
+   - The netlib sources contains several relevant fixes in this area
+     since my last version.
+   - **Note:** There is one additional change to the source code,
+     in file proc.c, see [below](#code-modification-in-procc).
 - Released as version 1.1, with release builds of f2c.exe in 32-bit
 and 64-bit using Visual Studio 2022 / Visual C++ 14.3.
 
@@ -34,7 +42,7 @@ and 64-bit using Visual Studio 2015 Update 3 / Visual C++ 14.0.
 # How to use
 
 The repository includes the original source code of the f2c utility as provided
-by netlib.org, with a small modification to avoid a compiler warning (see below).
+by netlib.org, with some very small modifications described below.
 So all you have to do is use Visual Studio to build the supplied project
 **f2c.vcxproj**. This produces the the console application **f2c.exe**.
 
@@ -58,6 +66,35 @@ in the same lines. So comment out the following two lines in **sysdep.c**:
 ```c
     Cextern int unlink Argdcl((const char *));
     Cextern int fork Argdcl((void)), getpid Argdcl((void)), wait Argdcl((int*));
+```
+
+## Code modification in proc.c
+
+One additional change is needed to fix a memory access related crash
+in the x64 build of the program as of netlib source version 20200916.
+
+In proc.c line 1700 from netlib source version 20200916,
+this is the original code:
+```
+v->vdim = p = (struct Dimblock *)
+    ckalloc( sizeof(int) + (3+2*nd)*sizeof(expptr) );
+```
+It must be changed to:
+```
+v->vdim = p = (struct Dimblock*)
+    ckalloc(sizeof(struct Dimblock) + 2*sizeof(expptr)*(nd-1));
+```
+
+This is the exact same fix (on a different line) as the following,
+mentioned in netlib [changes](http://www.netlib.org/f2c/changes):
+```
+20181026
+  Fix an allocation glitch in proc.c:
+1149c1149
+< 	    size = sizeof(int) + (3 + 2 * nd) * sizeof (expptr);
+---
+> 	    size = sizeof(struct Dimblock) + 2*sizeof(expptr)*(nd-1);
+Thanks to Ole Streicher for pointing out the need for this change.
 ```
 
 # How the Visual Studio project was created

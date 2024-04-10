@@ -21,6 +21,13 @@ some very small necessary fixes, described [below](#how-to-use).
 See <http://www.netlib.org/f2c/changes> for history of changes in the netlib f2c source,
 and run `f2c.exe --version` on an existing build to see which version it was built from.
 
+10 Apr 2024
+- Updated to latest version of netlib f2c source, version 20240312.
+- This includes the fix in file proc.c that I previously did manually in my source.
+- Released as version 1.2, with release builds of f2c.exe in 32-bit
+and 64-bit using Visual Studio 2022 (17.9.6) / Visual C++ 14.3 and
+Windows SDK 10.0.22621.0.
+
 13 Jan 2022
 - Updated to latest version of netlib f2c source, version 20200916.
    - The newer 20210928 entry in [changes](http://www.netlib.org/f2c/changes)
@@ -29,8 +36,10 @@ and run `f2c.exe --version` on an existing build to see which version it was bui
 - Fixes broken x64 build.
    - The netlib sources contains several relevant fixes in this area
      since my last version.
-   - **Note:** There is one additional change to the source code,
-     in file proc.c, see [below](#code-modification-in-procc).
+   - **Note:** There is one additional change to the source code that is needed to fix
+     a memory access related crash in the x64 build of the program. Edit: This was later
+     fixed in netlib sources version 20230428, see [changes](http://www.netlib.org/f2c/changes)
+     for details.
 - Released as version 1.1, with release builds of f2c.exe in 32-bit
 and 64-bit using Visual Studio 2022 / Visual C++ 14.3.
 
@@ -39,12 +48,16 @@ and 64-bit using Visual Studio 2022 / Visual C++ 14.3.
 - Released as version 1.0, with release builds of f2c.exe in 32-bit
 and 64-bit using Visual Studio 2015 Update 3 / Visual C++ 14.0.
 
-# How to use
+# Building
 
-The repository includes the original source code of the f2c utility as provided
-by netlib.org, with some very small modifications described below.
-So all you have to do is use Visual Studio to build the supplied project
-**f2c.vcxproj**. This produces the the console application **f2c.exe**.
+This repository includes the original source code of the f2c utility as provided
+by netlib.org, with some very small modifications described below, and an added
+Visual Studio project. So all you have to do is use Visual Studio to build the supplied
+project **f2c.vcxproj**. This produces the the console application **f2c.exe**.
+
+The project file is for the older Visual Studio 2015, but you can open it with newest
+Visual Studio 2022, and also upgrade it to use the newest versions of Platform Toolset
+and Windows SDK.
 
 If you want to use your own copy of the f2c source code you just have to
 get the project file from this repository, and then download the latest version
@@ -52,50 +65,6 @@ of from <http://www.netlib.org/f2c/> (source archive direct download:
 <http://www.netlib.org/f2c/src.tgz>). Extract the subdirectory named "src",
 which contains all the relevant source files. Actually you only need the source
 (.c) and header (.h) files from the src directory, so you can delete all others.
-
-## Code modification in sysdep.c
-
-When building the unchanged original source code you get two warnings about
-*inconsistent dll linkage* (warning C4273) on the declarations of the functions
-unlink and getpid in file sysdep.c. I am not entirely sure how much of a problem
-this is, but it is easy to avoid them since you can just comment out the
-declarations from sysdep.c, as they are already available from standard libraries
-from existing includes. The same is true for declarations of fork and wait
-in the same lines. So comment out the following two lines in **sysdep.c**:
-
-```c
-    Cextern int unlink Argdcl((const char *));
-    Cextern int fork Argdcl((void)), getpid Argdcl((void)), wait Argdcl((int*));
-```
-
-## Code modification in proc.c
-
-One additional change is needed to fix a memory access related crash
-in the x64 build of the program as of netlib source version 20200916.
-
-In proc.c line 1700 from netlib source version 20200916,
-this is the original code:
-```c
-v->vdim = p = (struct Dimblock *)
-    ckalloc( sizeof(int) + (3+2*nd)*sizeof(expptr) );
-```
-It must be changed to:
-```c
-v->vdim = p = (struct Dimblock *)
-    ckalloc(sizeof(struct Dimblock) + 2*sizeof(expptr)*(nd-1));
-```
-
-This is the exact same fix (on a different line) as the following,
-mentioned in netlib [changes](http://www.netlib.org/f2c/changes):
-```
-20181026
-  Fix an allocation glitch in proc.c:
-1149c1149
-< 	    size = sizeof(int) + (3 + 2 * nd) * sizeof (expptr);
----
-> 	    size = sizeof(struct Dimblock) + 2*sizeof(expptr)*(nd-1);
-Thanks to Ole Streicher for pointing out the need for this change.
-```
 
 # How the Visual Studio project was created
 
@@ -122,15 +91,48 @@ the source code, and then a substantial portion of my own trial and error.
 
 4. Add all header files, files with extension .h, to the project.
 
-5. Modify the file sysdep.c as described above (comment out the two lines).
+5. Modify the file sysdep.c as follows:
 
-6. Modify the Character Set option, set it to "Use Multi-Byte Character Set" instead of Unicode.
+   When building the unchanged original source code you get two warnings about
+   *inconsistent dll linkage* (warning C4273) on the declarations of the functions
+   unlink and getpid in file sysdep.c. I am not entirely sure how much of a problem
+   this is, but it is easy to avoid them since you can just comment out the
+   declarations from sysdep.c, as they are already available from standard libraries
+   from existing includes. The same is true for declarations of fork and wait
+   in the same lines. So comment out the following two lines in **sysdep.c**:
+   
+   ```c
+       Cextern int unlink Argdcl((const char *));
+       Cextern int fork Argdcl((void)), getpid Argdcl((void)), wait Argdcl((int*));
+   ```
+
+6. Create file tokdefs.h. This was included in previous versions, but with version
+   20240312 it was not - however still needed to build. The version from previous versions
+   can still be used, or it can be created from the file tokens included in the netlib
+   sources.
+   
+   The original tokens file lists 100 keywords such as this:
+   ```
+   SEOS
+   SCOMMENT
+   SLABEL
+   ...
+   ```
+   The needed tokdefs.h needs to define them in different format:
+   ```c
+   #define SEOS 1
+   #define SCOMMENT 2
+   #define SLABEL 3
+   ...
+   ```
+
+7. Modify the Character Set option, set it to "Use Multi-Byte Character Set" instead of Unicode.
    This because there is a call to the Windows API function GetVolumeInformation which is
    supplying ANSI strings (char*) as arguments, and therefore expects it to be the ANSI
    version GetVolumeInformationA and not the Unicode version GetVolumeInformationW which
    expects LPCWSTR (wchar_t) type of string arguments.
 
-7. Add the following preprocessor directives on project level:
+8. Add the following preprocessor directives on project level:
 
    ```c
    STRICT;WIN32_LEAN_AND_MEAN;NOMINMAX
@@ -142,11 +144,11 @@ the source code, and then a substantial portion of my own trial and error.
    * WIN32_LEAN_AND_MEAN is to speed the build process exclude rarely-used services from Windows headers.
    * NOMINMAX is to exclude min/max macros from Windows header, which may interfere with standard template versions.
 
-8. Make sure the SDL Checks option is turned off. If you create a new console project using the
+9. Make sure the SDL Checks option is turned off. If you create a new console project using the
    wizard in VS2015 it will have these enabled in Debug configuration, but that results in the
    many uses of deprecated functions being treated as build errors.
 
-9. Set warning level to 1 or 2. With level 3 you will get a lot of anoying warnings about unsafe sprintf,
+10. Set warning level to 1 or 2. With level 3 you will get a lot of anoying warnings about unsafe sprintf,
    deprecated POSIX name for unlink etc. Of course you could improve the code instead, that would be even
    better, but for building the original source code (almost) untouched you can turn the warnings off.
 
